@@ -109,7 +109,7 @@
      [:title (escape-html (:title metadata))]
      [:link  (str (URL. (URL. (:site-url (config))) (post-url file)))]
      [:pubDate (parse-date "yyyy-MM-dd" "E, d MMM yyyy HH:mm:ss Z"
-                           (re-find #"\d*-\d*-\d*" 
+                           (re-find #"\d*-\d*-\d*"
                                     (FilenameUtils/getBaseName (str file))))]
      [:description (escape-html @content)]]))
 
@@ -206,14 +206,18 @@
   "Render a post for display in index pages."
   [f]
   (let [[metadata content] (read-doc f)]
-    [:div [:h2 [:a {:href (post-url f)} (:title metadata)]]
-     [:p {:class "publish_date"}  
-      (parse-date "yyyy-MM-dd" "dd MMM yyyy" 
-                  (re-find #"\d*-\d*-\d*" 
-                           (FilenameUtils/getBaseName (str f))))]
-     [:p @content]]))
+    [:div.post.hentry
+     [:h2.entry-title
+      [:a {:href (post-url f)} (:title metadata)]]
+     [:div.entry-meta
+      [:span.meta-prep.meta-author "Posted on "]
+      [:a {:href (post-url f) :rel "bookmark"}
+       (parse-date "yyyy-MM-dd" "dd MMM yyyy"
+                   (re-find #"\d*-\d*-\d*"
+                            (FilenameUtils/getBaseName (str f))))]]
+     [:div.entry-content @content]]))
 
-(defn create-latest-posts 
+(defn create-latest-posts
   "Create and write latest post pages."
   []
   (let [posts-per-page (:posts-per-page (config))
@@ -227,10 +231,13 @@
       (write-out-dir
        (str "latest-posts/" page "/index.html")
        (template
-            [{:title (:site-title (config))
+        [{:title (:site-title (config))
           :description (:site-description (config))
-              :template (:default-template (config))}
-             (html (list (map #(snippet %) posts) (pager page max-index posts-per-page)))])))))
+          :template (:default-template (config))}
+         (html
+          (list
+           (map #(snippet %) posts)
+           (pager page max-index posts-per-page)))])))))
 
 ;;
 ;; Create Archive Pages.
